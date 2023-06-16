@@ -12,7 +12,7 @@ let sun = new THREE.Vector3();
 let water = null;
 const sky = new Sky();
 const parameters = {
-  elevation: 2,
+  elevation:300,
   azimuth: 180,
 };
 const { scene, camera, renderer, controls } = new Threejs({
@@ -60,7 +60,7 @@ const createWater = () => {
 createWater();
 
 function updateSun() {
-  const phi = THREE.MathUtils.degToRad(10 - parameters.elevation);
+  const phi = THREE.MathUtils.degToRad(parameters.elevation);
   const theta = THREE.MathUtils.degToRad(parameters.azimuth);
   sun.setFromSphericalCoords(1, phi, theta);
   sky.material.uniforms["sunPosition"].value.copy(sun);
@@ -145,12 +145,43 @@ onMounted(() => {
 });
 
 
+
+function getRotationAngle() {
+  var now = new Date();
+  var hour = 5.8 || now.getHours();
+  var minute = now.getMinutes();
+  var second = now.getSeconds();
+  // 计算时针、分针和秒针的旋转角度
+  var hourAngle = ((hour % 12 + minute / 60 + second / 3600) * 30) / 2 ; // 每小时30度
+  var minuteAngle = (minute + second / 60) * 6;// 每分钟6度
+  var secondAngle = second * 6; // 每秒钟6度
+
+  // 返回一个包含三个角度的对象
+  return {
+    hour: hourAngle,
+    minute: minuteAngle,
+    second: secondAngle
+  };
+}
+
+// 使用示例
+var rotation = getRotationAngle();
+console.log("时针角度：" + rotation.hour);
+console.log("分针角度：" + rotation.minute);
+console.log("秒针角度：" + rotation.second);
+
+
 const render = () => {
   renderer.render(scene, camera);
   // 控制器
   controls && controls.update();
   requestAnimationFrame(render);
   water.material.uniforms["time"].value += 1.0 / 60.0;
+
+  // 控制太阳的角度
+  const rotation = getRotationAngle();
+  parameters.elevation = rotation.hour;
+  updateSun();
 };
 render();
 </script>
