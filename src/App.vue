@@ -12,17 +12,21 @@ let sun = new THREE.Vector3();
 let water = null;
 const sky = new Sky();
 const parameters = {
-  elevation:300,
+  elevation: 300,
   azimuth: 180,
 };
 const { scene, camera, renderer, controls } = new Threejs({
   el: "app",
-  // isAxesHelper: true,
-  // orbitControls: true, // 开启  cameraPosition 则无效果
-  cameraPosition: [0, 20, 0],
+  isAxesHelper: true,
+  orbitControls: true, // 开启  cameraPosition 则无效果
+  cameraPosition: [20, 0, 100],
 });
+
+controls.target.set(0, 3, 0);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; // 渲染器会使用该算法对渲染的图像进行色彩映射，以产生更加真实和逼真的视觉效果。
 renderer.toneMappingExposure = 0.5; // 用于设置渲染器的色调映射曝光值
+
+
 // 创建天空盒
 const createSky = () => {
   sky.scale.setScalar(10000);
@@ -32,6 +36,7 @@ const createSky = () => {
   skyUniforms["rayleigh"].value = 2;
   skyUniforms["mieCoefficient"].value = 0.005;
   skyUniforms["mieDirectionalG"].value = 0.8;
+
 };
 createSky();
 
@@ -113,8 +118,8 @@ createMTLLoader();
 const setFromEuler = (movementX, movementY, camera) => {
   const _euler = new THREE.Euler(0, 0, 0, "YXZ");
   _euler.setFromQuaternion(camera.quaternion);
-  _euler.y += movementX * 0.002 * 1.0;
-  _euler.x += movementY * 0.002 * 1.0;
+  _euler.y += movementX * 0.002 * 1.0 ;
+  _euler.x += movementY * 0.002 * 1.0 ;
   _euler.x = Math.max(
     Math.PI / 2 - Math.PI,
     Math.min(Math.PI / 2 - 0, _euler.x)
@@ -134,41 +139,56 @@ const mousermove = (event) => {
 
 onMounted(() => {
   // 鼠标按下
-  document.addEventListener("mousedown", () => {
-    document.addEventListener("mousemove", mousermove);
-  });
-  // 鼠标离开
-  document.addEventListener("mouseup", (event) => {
-    event.preventDefault();
-    document.removeEventListener("mousemove", mousermove);
-  });
+  // document.addEventListener("mousedown", () => {
+  //   document.addEventListener("mousemove", mousermove);
+  // });
+  // // 鼠标离开
+  // document.addEventListener("mouseup", (event) => {
+  //   event.preventDefault();
+  //   document.removeEventListener("mousemove", mousermove);
+  // });
 });
 
+// 返回几点钟的时间戳
+const dateTime = (hour, minute, second) => {
+  const sixAM = new Date();
+  sixAM.setHours(hour);
+  return sixAM.getTime();
+};
+
+// 计算角度
+const linearInterpolation = (
+  value = dateTime(10),
+  startValue = dateTime(6),
+  endValue = dateTime(19),
+  startRange = 92.4,
+  endRange = -92.4
+) => {
+  if (value < startValue) {
+    return startRange;
+  }
+  if (value > endValue) {
+    return endRange;
+  }
+  var range = endRange - startRange;
+  var relativePosition = (value - startValue) / (endValue - startValue);
+  var interpolatedValue = startRange + relativePosition * range;
+  return interpolatedValue;
+};
+
+// 创建罗盘的指针
+var pointerGeometry = new THREE.PlaneGeometry(0.2, 2); // 指针的几何体
+var pointerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // 指针的材质
+var pointer = new THREE.Mesh(pointerGeometry, pointerMaterial); // 创建指针的网格对象
+
+// 设置指针的初始位置和旋转
+pointer.position.set(20, 0, -15); // 设置指针的位置
+pointer.rotation.z = Math.PI / 4; // 设置指针的初始旋转角度
+
+// 添加指针到场景中
+scene.add(pointer);
 
 
-function getRotationAngle() {
-  var now = new Date();
-  var hour = 5.8 || now.getHours();
-  var minute = now.getMinutes();
-  var second = now.getSeconds();
-  // 计算时针、分针和秒针的旋转角度
-  var hourAngle = ((hour % 12 + minute / 60 + second / 3600) * 30) / 2 ; // 每小时30度
-  var minuteAngle = (minute + second / 60) * 6;// 每分钟6度
-  var secondAngle = second * 6; // 每秒钟6度
-
-  // 返回一个包含三个角度的对象
-  return {
-    hour: hourAngle,
-    minute: minuteAngle,
-    second: secondAngle
-  };
-}
-
-// 使用示例
-var rotation = getRotationAngle();
-console.log("时针角度：" + rotation.hour);
-console.log("分针角度：" + rotation.minute);
-console.log("秒针角度：" + rotation.second);
 
 
 const render = () => {
@@ -178,9 +198,12 @@ const render = () => {
   requestAnimationFrame(render);
   water.material.uniforms["time"].value += 1.0 / 60.0;
 
-  // 控制太阳的角度
-  const rotation = getRotationAngle();
-  parameters.elevation = rotation.hour;
+  // 获取太阳旋转的角度
+  const now = new Date();
+  const interpolatedValue = linearInterpolation(
+    dateTime(now.getHours(), now.getMinutes(), now.getSeconds())
+  );
+  parameters.elevation = interpolatedValue;
   updateSun();
 };
 render();
