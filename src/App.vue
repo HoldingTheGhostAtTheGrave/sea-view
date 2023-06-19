@@ -176,20 +176,6 @@ const linearInterpolation = (
   return interpolatedValue;
 };
 
-// 创建罗盘的指针
-var pointerGeometry = new THREE.PlaneGeometry(0.2, 2); // 指针的几何体
-var pointerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // 指针的材质
-var pointer = new THREE.Mesh(pointerGeometry, pointerMaterial); // 创建指针的网格对象
-
-// 设置指针的初始位置和旋转
-pointer.position.set(20, 0, -15); // 设置指针的位置
-pointer.rotation.z = Math.PI / 4; // 设置指针的初始旋转角度
-
-// 添加指针到场景中
-scene.add(pointer);
-
-
-
 
 const render = () => {
   renderer.render(scene, camera);
