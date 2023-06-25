@@ -13,6 +13,7 @@
     "three": "^0.153.0",
     "vite-plugin-mock": "^3.0.0",
     "vue": "^3.2.47",
+    "vue-router": "^4.2.2",
     "vue-template-compiler": "^2.7.14"
   },
   "devDependencies": {
